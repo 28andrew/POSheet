@@ -37,6 +37,12 @@ function updateSpeechesHeading() {
 var leftSpeechButton = $("#left-speech-button");
 var rightSpeechButton = $("#right-speech-button");
 
+function updateArrowsDisabledStates() {
+    leftSpeechButton.prop('disabled', data.activeBill === 0);
+    rightSpeechButton.prop('disabled',
+        (data.activeBill > (data.speeches.length - 1) || data.speeches[data.activeBill].length === 0));
+}
+
 function handleSpeechButton(delta) {
     var currentBill = data.activeBill;
     currentBill += delta;
@@ -44,8 +50,7 @@ function handleSpeechButton(delta) {
     data.activeBill = currentBill;
     saveData();
     updateSpeechesHeading();
-    // Update button states
-    leftSpeechButton.prop('disabled', currentBill === 0);
+    updateArrowsDisabledStates();
 }
 
 leftSpeechButton.click(function() {
@@ -58,8 +63,52 @@ rightSpeechButton.click(function() {
 updateSpeechesHeading();
 handleSpeechButton(0);
 
-// Add speaker logic
+// Autocomplete with datalists
 
+function updateList(datalistElement, list) {
+    datalistElement.html("");
+    for (var item of list) {
+        datalistElement.append("<option value=\"" + item + "\">");
+    }
+}
+
+function getUnique2d(array, transformElementFunction) {
+    var uniquePeople = [];
+
+    for (var peopleArray of array) {
+        for (var person of peopleArray) {
+            var transformed = transformElementFunction(person);
+            if (!uniquePeople.includes(transformed)) {
+                uniquePeople.push(transformed);
+            }
+        }
+    }
+
+    return uniquePeople;
+}
+
+function getAllPeople() {
+    var uniqueSpeakers = getUnique2d(data.speeches, function(speech) {
+        return speech.speaker;
+    });
+    var uniqueQuestioners = getUnique2d(data.questions, function(questioner) {
+        return questioner;
+    });
+    var combined = uniqueSpeakers.concat(uniqueQuestioners);
+    return combined.filter((item, pos) => combined.indexOf(item) === pos);
+}
+
+var speakersList = $("#speakers-list");
+var questionersList = $("#questioners-list");
+function updateAutoComplete() {
+    var allPeople = getAllPeople();
+    updateList(speakersList, allPeople);
+    updateList(questionersList, allPeople);
+}
+
+updateAutoComplete();
+
+// Add speaker logic
 var speakerInput = $("#speaker-input");
 var sideSelectInput = $("#side-select");
 var speakerAddButton = $("#speaker-add-button");
@@ -98,7 +147,16 @@ function handleSpeakerAddButton() {
     speakerInput.val('');
 
     updateDisplayedSpeeches();
+    updateArrowsDisabledStates();
+    updateAutoComplete();
     saveData();
+}
+
+// Set side select input depending on last speech
+var lastSpeakerArr = data.speeches[data.speeches.length - 1];
+var lastSpeaker = lastSpeakerArr[lastSpeakerArr.length - 1];
+if (lastSpeaker) {
+    sideSelectInput.val(lastSpeaker.side === 'aff' ? 'neg' : 'aff');
 }
 
 var speechesTableBody = $("#speeches-body");
@@ -113,6 +171,10 @@ function updateDisplayedSpeeches() {
     for (var row = 0; row < maxLength; row++) {
         var rowHtml = "<tr>";
         for (var column = 0; column < getTotalBills(); column++) {
+            // If invalid index, skip
+            if (column > (data.speeches.length - 1)) {
+                continue;
+            }
             var speechData = data.speeches[column][row];
             if (speechData) {
                 var side = (speechData.side === 'aff') ? 'A' : 'N';
@@ -201,7 +263,6 @@ function determineNext(previousPeopleArray, arrayElementToNameFunction) {
 }
 
 var nextSpeakersElement = $("#next-speakers");
-
 function updateNextSpeakers() {
     var nextSpeakers = determineNext(data.speeches, function(element) {
         return element.speaker;
@@ -211,8 +272,90 @@ function updateNextSpeakers() {
     for (var nextSpeaker of nextSpeakers) {
         nextSpeakersElement.append("<li class=\"list-group-item\">" + nextSpeaker.person + " (" + nextSpeaker.occurrences + ")</li>");
     }
-
 }
 
 updateDisplayedSpeeches();
-updateNextSpeakers();
+
+// Add question logic
+var questionInput = $("#question-input");
+var questionAddButton = $("#question-button");
+
+questionAddButton.click(function() {
+    handleQuestionerAddButton();
+});
+questionInput.keypress(function(event) {
+    // Detect enter in input
+    if (event.keyCode === 13) handleQuestionerAddButton();
+})
+
+function handleQuestionerAddButton() {
+    var questioner = questionInput.val();
+    // Ignore empty inputs
+    if (!questioner || questioner.trim() === "") {
+        return;
+    }
+
+    // Figure out next question count/index
+    var index = 0;
+    for (var questionerArray of data.questions) {
+        if (!questionerArray.includes(questioner)) {
+            break;
+        }
+        index++;
+    }
+
+    // Populate data.questions
+    while (data.questions.length < (index + 1)) {
+        data.questions.push([]);
+    }
+
+    data.questions[index].push(questioner);
+
+    questionInput.val('');
+
+    updateDisplayedQuestioners();
+    updateAutoComplete();
+    saveData();
+}
+
+var questionsHeadingTr = $("#questions-heading");
+var questionsTableBody = $("#questions-body");
+function updateDisplayedQuestioners() {
+    // Update table header
+    questionsHeadingTr.html("");
+    for (var i = 0; i < data.questions.length; i++) {
+        questionsHeadingTr.append("<th scope=\"col\">" + (i + 1) + "</th>");
+    }
+
+    // Update table body
+    var maxLength = Math.max(...(data.questions.map(function(questioners) {
+        return questioners.length;
+    })));
+    questionsTableBody.html("");
+    for (var row = 0; row < maxLength; row++) {
+        var rowHtml = "<tr>";
+        for (var column = 0; column < data.questions.length; column++) {
+            var questioner = data.questions[column][row];
+            rowHtml += "<td>" + (questioner ? questioner : '') + "</td>";
+        }
+        rowHtml += "</tr>";
+        questionsTableBody.append(rowHtml);
+    }
+
+    updateNextQuestioners();
+}
+
+var nextQuestionersElement = $("#next-questioners");
+function updateNextQuestioners() {
+    var nextQuestioners = determineNext(data.questions, function (questioner) {
+        return questioner;
+    });
+
+    nextQuestionersElement.html("");
+    for (var nextQuestioner of nextQuestioners) {
+        nextQuestionersElement.append("<li class=\"list-group-item\">" + nextQuestioner.person +
+            " (" + nextQuestioner.occurrences + ")</li>")
+    }
+}
+
+updateDisplayedQuestioners();
