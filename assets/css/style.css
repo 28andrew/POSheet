@@ -1,0 +1,16 @@
+.table-col {
+    min-width: 750px;
+}
+
+.add-button {
+    max-width: 400px;
+}
+
+#side-select {
+    max-width: 100px;
+}
+
+.selected-element {
+    text-decoration: underline;
+    color: green;
+}
