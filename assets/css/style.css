@@ -14,3 +14,16 @@
     text-decoration: underline;
     color: green;
 }
+
+.action-button {
+    color: grey;
+    text-decoration: none;
+}
+
+.flip-button {
+    font-size: 0.9em;
+}
+
+.delete-button {
+    font-size: 1.25em;
+}

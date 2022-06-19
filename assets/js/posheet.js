@@ -43,11 +43,26 @@ function updateArrowsDisabledStates() {
         (data.activeBill > (data.speeches.length - 1) || data.speeches[data.activeBill].length === 0));
 }
 
+var sideSelectInput = $("#side-select");
+
 function handleSpeechButton(delta) {
     var currentBill = data.activeBill;
     currentBill += delta;
     currentBill = Math.max(0, currentBill);
     data.activeBill = currentBill;
+
+    // Change side select to AFF if active bill has 0 speeches
+    if (currentBill > (data.speeches.length - 1) || data.speeches[currentBill].length === 0) {
+        sideSelectInput.val('aff');
+    } else {
+        // Change side select to opposite of last speech of new bill
+        if (currentBill <= (data.speeches.length - 1)) {
+            var speeches = data.speeches[currentBill];
+            var lastSpeech = speeches[speeches.length - 1];
+            sideSelectInput.val(lastSpeech.side === 'aff' ? 'neg' : 'aff');
+        }
+    }
+
     saveData();
     updateSpeechesHeading();
     updateArrowsDisabledStates();
@@ -110,7 +125,6 @@ updateAutoComplete();
 
 // Add speaker logic
 var speakerInput = $("#speaker-input");
-var sideSelectInput = $("#side-select");
 var speakerAddButton = $("#speaker-add-button");
 
 speakerAddButton.click(function() {
@@ -122,12 +136,51 @@ speakerInput.keypress(function(event) {
     if (event.keyCode === 13) handleSpeakerAddButton();
 });
 
+var statisticsText = $("#statistics-text");
+function updateStatistics() {
+    var speeches = 0;
+    for (var speechArr of data.speeches) {
+        speeches += speechArr.length;
+    }
+    var questions = 0;
+    for (var questionArr of data.questions) {
+        questions += questionArr.length;
+    }
+
+    var speechWord = "speech" + (speeches === 1 ? '' : 'es');
+    var questionWord = "question" + (questions === 1 ? '' : 's');
+
+    statisticsText.html(speeches + " " + speechWord + "<br> " + questions + " " + questionWord);
+}
+
+updateStatistics();
+
+function handleChangedSpeeches() {
+    updateDisplayedSpeeches();
+    updateArrowsDisabledStates();
+    updateAutoComplete();
+    updateStatistics();
+    saveData();
+}
+
+function capitalizeFirstLetterOnly(string) {
+    if (string.length === 0) {
+        return "";
+    }
+    if (string.length === 1) {
+        return string.charAt(0).toUpperCase();
+    }
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
 function handleSpeakerAddButton() {
     var speaker = speakerInput.val();
     // Ignore empty inputs
     if (!speaker || speaker.trim() === "") {
         return;
     }
+    speaker = capitalizeFirstLetterOnly(speaker);
+
     var side = sideSelectInput.val();
     var currentBill = data.activeBill;
 
@@ -146,10 +199,7 @@ function handleSpeakerAddButton() {
 
     speakerInput.val('');
 
-    updateDisplayedSpeeches();
-    updateArrowsDisabledStates();
-    updateAutoComplete();
-    saveData();
+    handleChangedSpeeches();
 }
 
 // Set side select input depending on last speech
@@ -178,7 +228,9 @@ function updateDisplayedSpeeches() {
             var speechData = data.speeches[column][row];
             if (speechData) {
                 var side = (speechData.side === 'aff') ? 'A' : 'N';
-                rowHtml += "<td>" + speechData.speaker + " (" + side + ")</td>";
+                var flipButton = "<a class=\"action-button flip-button\" href=\"javascript:flipSpeech(" + column + "," + row + ");\">↻</a>";
+                var closeButton = "<a class=\"action-button delete-button\" href=\"javascript:deleteSpeech(" + column + "," + row + ");\">&times;</a>";
+                rowHtml += "<td>" + speechData.speaker + " (" + side + ") " + flipButton + closeButton + "</td>";
             } else {
                 rowHtml += "<td></td>";
             }
@@ -190,8 +242,19 @@ function updateDisplayedSpeeches() {
     updateNextSpeakers();
 }
 
+function deleteSpeech(column, row) {
+    data.speeches[column].splice(row, 1);
+    handleChangedSpeeches();
+}
+
+function flipSpeech(column, row) {
+    var side = data.speeches[column][row].side;
+    data.speeches[column][row].side = side === 'aff' ? 'neg' : 'aff';
+    handleChangedSpeeches();
+}
+
 /*
-    Next speakers/questioners logic algorithm.
+    Next speakers/questioners algorithm.
     Returns array of objects with properties "person" and "occurrences".
  */
 function determineNext(previousPeopleArray, arrayElementToNameFunction) {
@@ -288,12 +351,20 @@ questionInput.keypress(function(event) {
     if (event.keyCode === 13) handleQuestionerAddButton();
 })
 
+function handleChangedQuestioners() {
+    updateDisplayedQuestioners();
+    updateAutoComplete();
+    updateStatistics();
+    saveData();
+}
+
 function handleQuestionerAddButton() {
     var questioner = questionInput.val();
     // Ignore empty inputs
     if (!questioner || questioner.trim() === "") {
         return;
     }
+    questioner = capitalizeFirstLetterOnly(questioner);
 
     // Figure out next question count/index
     var index = 0;
@@ -310,12 +381,8 @@ function handleQuestionerAddButton() {
     }
 
     data.questions[index].push(questioner);
-
     questionInput.val('');
-
-    updateDisplayedQuestioners();
-    updateAutoComplete();
-    saveData();
+    handleChangedQuestioners();
 }
 
 var questionsHeadingTr = $("#questions-heading");
@@ -336,13 +403,19 @@ function updateDisplayedQuestioners() {
         var rowHtml = "<tr>";
         for (var column = 0; column < data.questions.length; column++) {
             var questioner = data.questions[column][row];
-            rowHtml += "<td>" + (questioner ? questioner : '') + "</td>";
+            var closeButton = "<a class=\"action-button delete-button\" href=\"javascript:deleteQuestioner(" + column + "," + row + ");\">&times;</a>";
+            rowHtml += "<td>" + (questioner ? questioner + " " + closeButton : '') + "</td>";
         }
         rowHtml += "</tr>";
         questionsTableBody.append(rowHtml);
     }
 
     updateNextQuestioners();
+}
+
+function deleteQuestioner(column, row) {
+    data.questions[column].splice(row, 1);
+    handleChangedQuestioners();
 }
 
 var nextQuestionersElement = $("#next-questioners");
