@@ -243,8 +243,10 @@ function updateDisplayedSpeeches() {
 }
 
 function deleteSpeech(column, row) {
-    data.speeches[column].splice(row, 1);
-    handleChangedSpeeches();
+    if (confirm("Are you sure you would like to delete " + data.speeches[column][row].speaker + "'s speech?") === true) {
+        data.speeches[column].splice(row, 1);
+        handleChangedSpeeches();
+    }
 }
 
 function flipSpeech(column, row) {
@@ -414,8 +416,10 @@ function updateDisplayedQuestioners() {
 }
 
 function deleteQuestioner(column, row) {
-    data.questions[column].splice(row, 1);
-    handleChangedQuestioners();
+    if (confirm("Are you sure you would like to delete " + data.questions[column][row] + "'s question?")) {
+        data.questions[column].splice(row, 1);
+        handleChangedQuestioners();
+    }
 }
 
 var nextQuestionersElement = $("#next-questioners");
