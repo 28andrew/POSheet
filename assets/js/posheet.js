@@ -3,8 +3,6 @@ var localData = localStorage.getItem("posheet_data");
 var data = localData == null ? {} : JSON.parse(localData);
 
 function saveData() {
-    console.log('Saved:');
-    console.log(data);
     localStorage.setItem("posheet_data", JSON.stringify(data));
 }
 
