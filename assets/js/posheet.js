@@ -21,6 +21,19 @@ function getTotalBills() {
     return Math.max(data.speeches.length, (data.activeBill + 1));
 }
 
+// Confirmation modal bypass with shift key
+var shiftHeld = false;
+$(document).on('keyup keydown', function(e) {
+    shiftHeld = e.shiftKey;
+    return true;
+});
+
+function confirmWithShiftOverride(message) {
+    return shiftHeld || confirm(message);
+}
+
+// TODO: Merge more common code between speeches & questions
+
 // Active bill selection logic
 
 var speechesHeadingTr = $("#speeches-heading");
@@ -159,6 +172,7 @@ function updateStatistics() {
 updateStatistics();
 
 function handleChangedSpeeches() {
+    updateSpeechesHeading();
     updateDisplayedSpeeches();
     updateArrowsDisabledStates();
     updateAutoComplete();
@@ -177,7 +191,10 @@ function capitalizeFirstLetterOnly(string) {
 }
 
 function handleSpeakerAddButton() {
-    var speaker = speakerInput.val();
+    addSpeaker(speakerInput.val());
+}
+
+function addSpeaker(speaker) {
     // Ignore empty inputs
     if (!speaker || speaker.trim() === "") {
         return;
@@ -193,8 +210,8 @@ function handleSpeakerAddButton() {
     }
 
     data.speeches[currentBill].push({
-       'speaker': speaker,
-       'side': side
+        'speaker': speaker,
+        'side': side
     });
 
     // Flip AFF/NEG input
@@ -246,7 +263,7 @@ function updateDisplayedSpeeches() {
 }
 
 function deleteSpeech(column, row) {
-    if (confirm("Are you sure you would like to delete " + data.speeches[column][row].speaker + "'s speech?") === true) {
+    if (confirmWithShiftOverride("Are you sure you would like to delete " + data.speeches[column][row].speaker + "'s speech?") === true) {
         data.speeches[column].splice(row, 1);
         handleChangedSpeeches();
     }
@@ -338,7 +355,10 @@ function updateNextSpeakers() {
 
     nextSpeakersElement.html("");
     for (var nextSpeaker of nextSpeakers) {
-        nextSpeakersElement.append("<li class=\"list-group-item\">" + nextSpeaker.person + " (" + nextSpeaker.occurrences + ")</li>");
+        nextSpeakersElement.append("<a href=\"javascript:addSpeaker('" + nextSpeaker.person + "');\"" +
+            " class=\"list-group-item list-group-item-action\">" +
+            "<span class=\"action-button arrow-button\">⭲</span> " + nextSpeaker.person +
+            " <span class=\"badge bg-secondary\">" + nextSpeaker.occurrences + "</span></a>");
     }
 }
 
@@ -364,7 +384,10 @@ function handleChangedQuestioners() {
 }
 
 function handleQuestionerAddButton() {
-    var questioner = questionInput.val();
+    addQuestioner(questionInput.val());
+}
+
+function addQuestioner(questioner) {
     // Ignore empty inputs
     if (!questioner || questioner.trim() === "") {
         return;
@@ -425,7 +448,7 @@ function updateDisplayedQuestioners() {
 }
 
 function deleteQuestioner(column, row) {
-    if (confirm("Are you sure you would like to delete " + data.questions[column][row] + "'s question?")) {
+    if (confirmWithShiftOverride("Are you sure you would like to delete " + data.questions[column][row] + "'s question?")) {
         data.questions[column].splice(row, 1);
         handleChangedQuestioners();
     }
@@ -439,34 +462,40 @@ function updateNextQuestioners() {
 
     nextQuestionersElement.html("");
     for (var nextQuestioner of nextQuestioners) {
-        nextQuestionersElement.append("<li class=\"list-group-item\">" + nextQuestioner.person +
-            " (" + nextQuestioner.occurrences + ")</li>")
+        nextQuestionersElement.append("<a href=\"javascript:addQuestioner('" + nextQuestioner.person + "');\"" +
+            " class=\"list-group-item list-group-item-action\">" +
+            "<span class=\"action-button arrow-button\">⭲</span> " + nextQuestioner.person +
+            " <span class=\"badge bg-secondary\">" + nextQuestioner.occurrences + "</span></a>");
     }
 }
 
 updateDisplayedQuestioners();
 
+var accordions = $(".collapse");
+
 // Reset
 function resetSpeeches(bypassConfirmation) {
-    if(bypassConfirmation || confirm("Are you sure you would like to reset all speeches?")) {
+    if(bypassConfirmation || confirmWithShiftOverride("Are you sure you would like to reset all speeches?")) {
         data.activeBill = defaultData.activeBill;
         data.speeches = defaultData.speeches;
         saveData();
         handleChangedSpeeches();
+        accordions.collapse("hide");
     }
 }
 
 function resetQuestions(bypassConfirmation) {
-    if(bypassConfirmation || confirm("Are you sure you would like to reset all questions?")) {
+    if(bypassConfirmation || confirmWithShiftOverride("Are you sure you would like to reset all questions?")) {
         data.lastQuestionIndex = defaultData.lastQuestionIndex;
         data.questions = defaultData.questions;
         saveData();
         handleChangedQuestioners();
+        accordions.collapse("hide");
     }
 }
 
 function resetAll() {
-    if (confirm("Are you sure you would like to reset everything?")) {
+    if (confirmWithShiftOverride("Are you sure you would like to reset everything?")) {
         resetSpeeches(true);
         resetQuestions(true);
     }
