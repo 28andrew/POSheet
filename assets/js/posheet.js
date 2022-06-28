@@ -495,13 +495,6 @@ function resetQuestions(bypassConfirmation) {
     }
 }
 
-function resetAll() {
-    if (confirmWithShiftOverride("Are you sure you would like to reset everything?")) {
-        resetSpeeches(true);
-        resetQuestions(true);
-    }
-}
-
 // Timer logic
 
 var toggleButton = $("#toggle-button");
@@ -547,12 +540,14 @@ timerInput.keypress(function(event) {
     if (event.keyCode === 13) toggleTimer();
 });
 
-resetButton.on('click', function() {
+function resetTimer() {
     data.timer.enabled = false;
     updateTimerDisabledState();
     zeroTimer();
     saveData();
-});
+}
+
+resetButton.on('click', resetTimer);
 
 timerInput.on('change', function() {
      var seconds = validateTimerInput(timerInput.val());
@@ -597,3 +592,11 @@ setInterval(function() {
 
 updateTimerInput();
 updateTimerDisabledState();
+
+function resetAll() {
+    if (confirmWithShiftOverride("Are you sure you would like to reset everything?")) {
+        resetSpeeches(true);
+        resetQuestions(true);
+        resetTimer();
+    }
+}
