@@ -478,6 +478,7 @@ function resetSpeeches(bypassConfirmation) {
     if(bypassConfirmation || confirmWithShiftOverride("Are you sure you would like to reset all speeches?")) {
         data.activeBill = defaultData.activeBill;
         data.speeches = defaultData.speeches;
+        sideSelectInput.val('aff');
         saveData();
         handleChangedSpeeches();
         accordions.collapse("hide");
