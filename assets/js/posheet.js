@@ -12,6 +12,7 @@ function saveData() {
 var defaultData = {
     activeBill: 0,
     speeches: [[]],
+    lastQuestionIndex: 0,
     questions: [[]]
 };
 data = Object.assign({}, defaultData, data)
@@ -378,6 +379,7 @@ function handleQuestionerAddButton() {
         }
         index++;
     }
+    data.lastQuestionIndex = index;
 
     // Populate data.questions
     while (data.questions.length < (index + 1)) {
@@ -395,7 +397,12 @@ function updateDisplayedQuestioners() {
     // Update table header
     questionsHeadingTr.html("");
     for (var i = 0; i < data.questions.length; i++) {
-        questionsHeadingTr.append("<th scope=\"col\">" + (i + 1) + "</th>");
+        var heading = i + 1;
+        // Use badge for last added question
+        if (i === (data.lastQuestionIndex)) {
+            heading = "<span class=\"badge bg-primary selected-element\">" + heading + "</span>";
+        }
+        questionsHeadingTr.append("<th scope=\"col\">" + heading + "</th>");
     }
 
     // Update table body
@@ -451,6 +458,7 @@ function resetSpeeches(bypassConfirmation) {
 
 function resetQuestions(bypassConfirmation) {
     if(bypassConfirmation || confirm("Are you sure you would like to reset all questions?")) {
+        data.lastQuestionIndex = defaultData.lastQuestionIndex;
         data.questions = defaultData.questions;
         saveData();
         handleChangedQuestioners();
