@@ -69,16 +69,44 @@
                 </div>
             </div>
             <br>
-            <h3>Statistics</h3>
-            <div class="row">
-                <div class="col table-col">
-                    <p id="statistics-text">0 speeches; 0 questions</p>
+            <div class="accordion" id="accordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-statistics">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-statistics" aria-expanded="false" aria-controls="collapse-statistics">
+                            Statistics
+                        </button>
+                    </h2>
+                    <div id="collapse-statistics" class="accordion-collapse collapse" aria-labelledby="heading-statistics" data-bs-parent="#accordion">
+                        <div class="accordion-body">
+                            <p id="statistics-text">0 speeches; 0 questions</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <h5>About</h5>
-            <div class="row">
-                <div class="col table-col">
-                    <p>Source code available on <a href="">GitHub</a>.</p>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-options">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-options" aria-expanded="false" aria-controls="collapse-options">
+                            Options
+                        </button>
+                    </h2>
+                    <div id="collapse-options" class="accordion-collapse collapse" aria-labelledby="heading-options" data-bs-parent="#accordion">
+                        <div class="accordion-body">
+                            <button type="button" class="btn btn-danger" onclick="resetAll();">Reset All</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetSpeeches(false);">Reset Speeches</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetQuestions(false);">Reset Questions</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-about">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-about" aria-expanded="false" aria-controls="collapse-about">
+                            About
+                        </button>
+                    </h2>
+                    <div id="collapse-about" class="accordion-collapse collapse" aria-labelledby="heading-about" data-bs-parent="#accordion">
+                        <div class="accordion-body">
+                            <p>Created by <a href="mailto:andrewtran312@gmail.com" class="text-decoration-none">Andrew Tran</a>. Source code available on <a href="https://github.com/28andrew/POChart" class="text-decoration-none">GitHub</a>.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -436,3 +436,28 @@ function updateNextQuestioners() {
 }
 
 updateDisplayedQuestioners();
+
+// Reset
+function resetSpeeches(bypassConfirmation) {
+    if(bypassConfirmation || confirm("Are you sure you would like to reset all speeches?")) {
+        data.activeBill = defaultData.activeBill;
+        data.speeches = defaultData.speeches;
+        saveData();
+        handleChangedSpeeches();
+    }
+}
+
+function resetQuestions(bypassConfirmation) {
+    if(bypassConfirmation || confirm("Are you sure you would like to reset all questions?")) {
+        data.questions = defaultData.questions;
+        saveData();
+        handleChangedQuestioners();
+    }
+}
+
+function resetAll() {
+    if (confirm("Are you sure you would like to reset everything?")) {
+        resetSpeeches(true);
+        resetQuestions(true);
+    }
+}
