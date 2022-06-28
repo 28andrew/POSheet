@@ -28,9 +28,11 @@ function updateSpeechesHeading() {
     speechesHeadingTr.html("");
     for (var i = 0; i < getTotalBills(); i++) {
         var isActiveSpeech = i === data.activeBill;
-        var heading = (isActiveSpeech ? "☆" : "") + (i + 1);
-        var selectedClass = isActiveSpeech ? " class=\"selected-element\"" : "";
-        speechesHeadingTr.append("<th" + selectedClass + " scope=\"col\">" + heading + "</th>");
+        var heading = i + 1;
+        if (isActiveSpeech) {
+            heading = "<span class=\"badge bg-primary selected-element\">" + heading + "</span>";
+        }
+        speechesHeadingTr.append("<th scope=\"col\">" + heading + "</th>");
     }
 }
 
