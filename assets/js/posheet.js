@@ -13,7 +13,11 @@ var defaultData = {
     activeBill: 0,
     speeches: [[]],
     lastQuestionIndex: 0,
-    questions: [[]]
+    questions: [[]],
+    timer: {
+        enabled: false,
+        elapsedSeconds: 0
+    }
 };
 data = Object.assign({}, defaultData, data)
 
@@ -500,16 +504,15 @@ function resetAll() {
 }
 
 // Timer logic
-var enabled = false;
-var elapsedSeconds = 0;
 
 var toggleButton = $("#toggle-button");
 var resetButton = $("#reset-button");
 var timerInput = $("#timer-input");
 
 function zeroTimer() {
-    elapsedSeconds = 0;
+    data.timer.elapsedSeconds = 0;
     timerInput.val('0:00');
+    saveData();
 }
 
 var timerRegex = /(\d+):0?(\d+)/mg;
@@ -520,19 +523,22 @@ function validateTimerInput(input) {
         return null;
     }
     var minutes = parseInt(groups[1]);
-    console.log("minutes: " + minutes);
     var seconds = parseInt(groups[2]);
-    console.log("seconds: " + seconds);
     if (seconds > 59) {
         return null;
     }
 
-    console.log("OK");
     return (minutes * 60) + seconds;
 }
 
+function updateTimerDisabledState() {
+    timerInput.prop('disabled', data.timer.enabled);
+}
+
 function toggleTimer() {
-    enabled = !enabled;
+    data.timer.enabled = !data.timer.enabled;
+    updateTimerDisabledState();
+    saveData();
 }
 
 toggleButton.on('click', toggleTimer);
@@ -543,32 +549,39 @@ timerInput.keypress(function(event) {
 });
 
 resetButton.on('click', function() {
-    enabled = false;
+    data.timer.enabled = false;
     zeroTimer();
+    saveData();
 });
 
 timerInput.on('change', function() {
      var seconds = validateTimerInput(timerInput.val());
      if (seconds !== null) {
-         elapsedSeconds = seconds;
+         data.timer.elapsedSeconds = seconds;
+         saveData();
      }
 });
+
+function updateTimerInput() {
+    var minutes = Math.floor(data.timer.elapsedSeconds / 60);
+    var seconds = data.timer.elapsedSeconds % 60;
+    if (seconds < 10) {
+        seconds = '0' + seconds;
+    }
+    timerInput.val(minutes + ':' + seconds);
+}
 
 var warningShown = false;
 setInterval(function() {
     // Increment stopwatch
-    if (enabled) {
-        elapsedSeconds++;
-        var minutes = Math.floor(elapsedSeconds / 60);
-        var seconds = elapsedSeconds % 60;
-        if (seconds < 10) {
-            seconds = '0' + seconds;
-        }
-        timerInput.val(minutes + ':' + seconds);
+    if (data.timer.enabled) {
+        data.timer.elapsedSeconds++;
+        updateTimerInput();
+        saveData();
     }
 
     // Show buttons and timer as red if >= 3:00
-    var warning = elapsedSeconds >= 60 * 3;
+    var warning = data.timer.elapsedSeconds >= 60 * 3;
     if (warningShown !== warning) {
         warningShown = warning;
         var removeColor = warning ? 'dark' : 'danger';
@@ -581,3 +594,6 @@ setInterval(function() {
         timerInput.addClass('text-' + addColor);
     }
 }, 1000);
+
+updateTimerInput();
+updateTimerDisabledState();
