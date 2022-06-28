@@ -550,6 +550,7 @@ timerInput.keypress(function(event) {
 
 resetButton.on('click', function() {
     data.timer.enabled = false;
+    updateTimerDisabledState();
     zeroTimer();
     saveData();
 });
