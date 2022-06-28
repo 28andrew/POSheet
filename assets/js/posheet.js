@@ -356,8 +356,7 @@ function updateNextSpeakers() {
     nextSpeakersElement.html("");
     for (var nextSpeaker of nextSpeakers) {
         nextSpeakersElement.append("<a href=\"javascript:addSpeaker('" + nextSpeaker.person + "');\"" +
-            " class=\"list-group-item list-group-item-action\">" +
-            "<span class=\"action-button arrow-button\">⭲</span> " + nextSpeaker.person +
+            " class=\"list-group-item list-group-item-action\">" + nextSpeaker.person +
             " <span class=\"badge bg-secondary\">" + nextSpeaker.occurrences + "</span></a>");
     }
 }
@@ -463,8 +462,7 @@ function updateNextQuestioners() {
     nextQuestionersElement.html("");
     for (var nextQuestioner of nextQuestioners) {
         nextQuestionersElement.append("<a href=\"javascript:addQuestioner('" + nextQuestioner.person + "');\"" +
-            " class=\"list-group-item list-group-item-action\">" +
-            "<span class=\"action-button arrow-button\">⭲</span> " + nextQuestioner.person +
+            " class=\"list-group-item list-group-item-action\">" + nextQuestioner.person +
             " <span class=\"badge bg-secondary\">" + nextQuestioner.occurrences + "</span></a>");
     }
 }
@@ -500,3 +498,86 @@ function resetAll() {
         resetQuestions(true);
     }
 }
+
+// Timer logic
+var enabled = false;
+var elapsedSeconds = 0;
+
+var toggleButton = $("#toggle-button");
+var resetButton = $("#reset-button");
+var timerInput = $("#timer-input");
+
+function zeroTimer() {
+    elapsedSeconds = 0;
+    timerInput.val('0:00');
+}
+
+var timerRegex = /(\d+):0?(\d+)/mg;
+
+function validateTimerInput(input) {
+    var groups = timerRegex.exec(input);
+    if (!groups) {
+        return null;
+    }
+    var minutes = parseInt(groups[1]);
+    console.log("minutes: " + minutes);
+    var seconds = parseInt(groups[2]);
+    console.log("seconds: " + seconds);
+    if (seconds > 59) {
+        return null;
+    }
+
+    console.log("OK");
+    return (minutes * 60) + seconds;
+}
+
+function toggleTimer() {
+    enabled = !enabled;
+}
+
+toggleButton.on('click', toggleTimer);
+
+timerInput.keypress(function(event) {
+    // Detect enter in input
+    if (event.keyCode === 13) toggleTimer();
+});
+
+resetButton.on('click', function() {
+    enabled = false;
+    zeroTimer();
+});
+
+timerInput.on('change', function() {
+     var seconds = validateTimerInput(timerInput.val());
+     if (seconds !== null) {
+         elapsedSeconds = seconds;
+     }
+});
+
+var warningShown = false;
+setInterval(function() {
+    // Increment stopwatch
+    if (enabled) {
+        elapsedSeconds++;
+        var minutes = Math.floor(elapsedSeconds / 60);
+        var seconds = elapsedSeconds % 60;
+        if (seconds < 10) {
+            seconds = '0' + seconds;
+        }
+        timerInput.val(minutes + ':' + seconds);
+    }
+
+    // Show buttons and timer as red if >= 3:00
+    var warning = elapsedSeconds >= 60 * 3;
+    if (warningShown !== warning) {
+        warningShown = warning;
+        var removeColor = warning ? 'dark' : 'danger';
+        var addColor = warning ? 'danger' : 'dark';
+        toggleButton.removeClass('btn-' + removeColor);
+        toggleButton.addClass('btn-' + addColor)
+        resetButton.removeClass('btn-outline-' + removeColor);
+        resetButton.addClass('btn-outline-' + addColor);
+        timerInput.removeClass('text-' + removeColor);
+        timerInput.addClass('text-' + addColor);
+    }
+}, 1000);

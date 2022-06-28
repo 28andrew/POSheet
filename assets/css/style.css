@@ -30,3 +30,12 @@
 .arrow-button {
     font-size: 1.1em;
 }
+
+.no-emoji {
+    font-family: "Segoe UI Symbol", serif !important;
+}
+
+#timer-input {
+    font-size: 2em;
+    text-align: center;
+}
